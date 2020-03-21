@@ -1,0 +1,99 @@
+
+W:/labs/Lab4/Part2/part2.axf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+00000000 <__cs3_interrupt_vector>:
+
+          .text                   // executable code follows
+          .global _start                  
+
+_start:
+          MOV 	  R3, #0	  // R3 will hold sub-routine ONES return value
+   0:	e3a03000 	mov	r3, #0
+	  MOV 	  R5, #0	  // R5 will hold the greatest number of consecutive 1's
+   4:	e3a05000 	mov	r5, #0
+	  MOV     R2, #TEST_NUM   // load the data word ...
+   8:	e3a02060 	mov	r2, #96	; 0x60
+
+0000000c <LOOP_A>:
+
+LOOP_A:	  LDR     R6, [R2]
+   c:	e5926000 	ldr	r6, [r2]
+	  CMP	  R6, #0	  // check for end-of-list
+  10:	e3560000 	cmp	r6, #0
+	  BEQ	  END
+  14:	0a000003 	beq	28 <END>
+	  B	  ONES
+  18:	ea000003 	b	2c <ONES>
+
+0000001c <DONE_A>:
+
+DONE_A:	  B 	  STORE_LARGE
+  1c:	ea00000a 	b	4c <STORE_LARGE>
+
+00000020 <DONE_B>:
+DONE_B:	  ADD	  R2, #4
+  20:	e2822004 	add	r2, r2, #4
+	  B	  LOOP_A
+  24:	eafffff8 	b	c <LOOP_A>
+
+00000028 <END>:
+ 
+END:	  B	  END
+  28:	eafffffe 	b	28 <END>
+
+0000002c <ONES>:
+
+
+/* Subroutine returns the largest number of consecutive 1's in a word of data. */
+// Parameter: R1, Return: R0
+ 
+ONES:	  LDR	  R1, [R2]	  // load data word ... into R1
+  2c:	e5921000 	ldr	r1, [r2]
+	  MOV     R0, #0          // R0 will hold the result
+  30:	e3a00000 	mov	r0, #0
+
+00000034 <LOOP_B>:
+LOOP_B:   CMP     R1, #0          // loop until the data contains no more 1's
+  34:	e3510000 	cmp	r1, #0
+          BEQ     DONE_A             
+  38:	0afffff7 	beq	1c <DONE_A>
+          LSR     R4, R1, #1      // perform SHIFT, followed by AND
+  3c:	e1a040a1 	lsr	r4, r1, #1
+          AND     R1, R1, R4      
+  40:	e0011004 	and	r1, r1, r4
+          ADD     R0, #1          // count the string length so far
+  44:	e2800001 	add	r0, r0, #1
+          B       LOOP_B                       
+  48:	eafffff9 	b	34 <LOOP_B>
+
+0000004c <STORE_LARGE>:
+
+
+/* Subroutine stores the largest number of consecutive 1's */
+// Parameters: R3, R5
+
+STORE_LARGE:	MOV 	R3, R0
+  4c:	e1a03000 	mov	r3, r0
+		CMP 	R5, R3
+  50:	e1550003 	cmp	r5, r3
+		BGE 	DONE_B
+  54:	aafffff1 	bge	20 <DONE_B>
+		MOV 	R5, R3
+  58:	e1a05003 	mov	r5, r3
+		B  	DONE_B  
+  5c:	eaffffef 	b	20 <DONE_B>
+
+00000060 <TEST_NUM>:
+  60:	103fe00f 	.word	0x103fe00f
+  64:	10fff00f 	.word	0x10fff00f
+  68:	103fe002 	.word	0x103fe002
+  6c:	103fe003 	.word	0x103fe003
+  70:	103fe004 	.word	0x103fe004
+  74:	103fe005 	.word	0x103fe005
+  78:	103fe006 	.word	0x103fe006
+  7c:	103fe007 	.word	0x103fe007
+  80:	103fe008 	.word	0x103fe008
+  84:	00000000 	.word	0x00000000

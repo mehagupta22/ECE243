@@ -1,0 +1,227 @@
+
+W:/labs/Lab5/part1/part1.axf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+00000000 <__cs3_interrupt_vector>:
+
+
+
+_start:
+	
+	LDR	R0, =0xff200050 // holds KEYs address
+   0:	e59f00e4 	ldr	r0, [pc, #228]	; ec <BIT_CODES+0xc>
+	
+	LDR	R1, =0xff200020 // holds HEX address
+   4:	e59f10e4 	ldr	r1, [pc, #228]	; f0 <BIT_CODES+0x10>
+	MOV	R6, #0
+   8:	e3a06000 	mov	r6, #0
+
+0000000c <LOOP>:
+LOOP:   LDR	R2, [R0] // read from KEYs
+   c:	e5902000 	ldr	r2, [r0]
+
+00000010 <WAIT>:
+
+WAIT:   LDR	R5, [R0] // I/O polling
+  10:	e5905000 	ldr	r5, [r0]
+	
+	CMP	R5, #0
+  14:	e3550000 	cmp	r5, #0
+	
+	BNE	WAIT
+  18:	1afffffc 	bne	10 <WAIT>
+	
+	CMP	R2, #1 // if KEY[0] is pressed
+  1c:	e3520001 	cmp	r2, #1
+	
+	BEQ	KEY_0 
+  20:	0a000006 	beq	40 <KEY_0>
+	
+	CMP	R2, #2 // if KEY[1] is pressed
+  24:	e3520002 	cmp	r2, #2
+	
+	BEQ	KEY_1
+  28:	0a000009 	beq	54 <KEY_1>
+	
+	CMP	R2, #4 // if KEY[2] is pressed
+  2c:	e3520004 	cmp	r2, #4
+	
+	BEQ	KEY_2
+  30:	0a00000c 	beq	68 <KEY_2>
+	
+	CMP	R2, #8 // if KEY[3] is pressed
+  34:	e3520008 	cmp	r2, #8
+	
+	BEQ	KEY_3
+  38:	0a00000f 	beq	7c <KEY_3>
+	
+	B 	LOOP
+  3c:	eafffff2 	b	c <LOOP>
+
+00000040 <KEY_0>:
+
+// displays 0
+
+
+KEY_0: 
+	MOV	R3, #0
+  40:	e3a03000 	mov	r3, #0
+	
+	MOV	R6, #0
+  44:	e3a06000 	mov	r6, #0
+	
+	BL	HEX_DISPLAY
+  48:	eb000018 	bl	b0 <HEX_DISPLAY>
+	
+	STR	R3, [R1]
+  4c:	e5813000 	str	r3, [r1]
+	
+	B	LOOP
+  50:	eaffffed 	b	c <LOOP>
+
+00000054 <KEY_1>:
+
+// increments by 1
+
+
+KEY_1:
+	ADDS	R6, #1
+  54:	e2966001 	adds	r6, r6, #1
+	
+	MOV	R3, R6
+  58:	e1a03006 	mov	r3, r6
+	
+	BL	HEX_DISPLAY
+  5c:	eb000013 	bl	b0 <HEX_DISPLAY>
+	
+	STR	R3, [R1]
+  60:	e5813000 	str	r3, [r1]
+	
+	B	LOOP
+  64:	eaffffe8 	b	c <LOOP>
+
+00000068 <KEY_2>:
+// decrements by 1
+
+
+KEY_2:	
+	
+	SUBS	R6, #1
+  68:	e2566001 	subs	r6, r6, #1
+	
+	MOV	R3, R6
+  6c:	e1a03006 	mov	r3, r6
+	
+	BL	HEX_DISPLAY
+  70:	eb00000e 	bl	b0 <HEX_DISPLAY>
+	
+	STR	R3, [R1]
+  74:	e5813000 	str	r3, [r1]
+	
+	B	LOOP
+  78:	eaffffe3 	b	c <LOOP>
+
+0000007c <KEY_3>:
+
+// blanks display and then starts from 0 when any other key is pressed
+
+
+KEY_3:
+	MOV	R3, #0b00000000
+  7c:	e3a03000 	mov	r3, #0
+	
+	STR	R3, [R1]
+  80:	e5813000 	str	r3, [r1]
+
+00000084 <BACK>:
+
+BACK:	LDR	R2, [R0]
+  84:	e5902000 	ldr	r2, [r0]
+
+00000088 <IN_LOOP>:
+
+IN_LOOP:
+	
+	LDR	R5, [R0]
+  88:	e5905000 	ldr	r5, [r0]
+
+	CMP	R5, #0
+  8c:	e3550000 	cmp	r5, #0
+	
+	BNE	IN_LOOP
+  90:	1afffffc 	bne	88 <IN_LOOP>
+	MOV	R5, R2
+  94:	e1a05002 	mov	r5, r2
+	
+	CMP	R5, #0
+  98:	e3550000 	cmp	r5, #0
+	
+	BEQ	BACK
+  9c:	0afffff8 	beq	84 <BACK>
+
+	MOV	R3, #0b00111111
+  a0:	e3a0303f 	mov	r3, #63	; 0x3f
+
+	STR	R3, [R1]
+  a4:	e5813000 	str	r3, [r1]
+
+   	MOV	R6, #0
+  a8:	e3a06000 	mov	r6, #0
+
+	B 	LOOP
+  ac:	eaffffd6 	b	c <LOOP>
+
+000000b0 <HEX_DISPLAY>:
+
+// converts decimal number for HEX display
+
+HEX_DISPLAY: 
+	
+	CMP	R3, #0
+  b0:	e3530000 	cmp	r3, #0
+	BLT	BOUNDS_DOWN
+  b4:	ba000005 	blt	d0 <BOUNDS_DOWN>
+	CMP	R3, #10
+  b8:	e353000a 	cmp	r3, #10
+	
+	BGE	BOUNDS_UP
+  bc:	aa000005 	bge	d8 <BOUNDS_UP>
+	MOV	R4, #BIT_CODES
+  c0:	e3a040e0 	mov	r4, #224	; 0xe0
+
+	ADD	R4, R4, R3
+  c4:	e0844003 	add	r4, r4, r3
+
+	LDRB	R3, [R4]
+  c8:	e5d43000 	ldrb	r3, [r4]
+
+	MOV	PC, LR
+  cc:	e1a0f00e 	mov	pc, lr
+
+000000d0 <BOUNDS_DOWN>:
+
+
+
+BOUNDS_DOWN:
+	ADD	R3, #10
+  d0:	e283300a 	add	r3, r3, #10
+	B	HEX_DISPLAY
+  d4:	eafffff5 	b	b0 <HEX_DISPLAY>
+
+000000d8 <BOUNDS_UP>:
+
+BOUNDS_UP:
+	SUB	R3, #10
+  d8:	e243300a 	sub	r3, r3, #10
+	
+	B	HEX_DISPLAY
+  dc:	eafffff3 	b	b0 <HEX_DISPLAY>
+
+000000e0 <BIT_CODES>:
+  e0:	4f5b063f 	.word	0x4f5b063f
+  e4:	077d6d66 	.word	0x077d6d66
+  e8:	0000677f 	.word	0x0000677f
+  ec:	ff200050 	.word	0xff200050
+  f0:	ff200020 	.word	0xff200020

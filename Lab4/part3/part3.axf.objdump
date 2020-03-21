@@ -1,0 +1,182 @@
+
+W:/labs/Lab4/Part3/part3.axf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+00000000 <__cs3_interrupt_vector>:
+
+          .text                   // executable code follows
+          .global _start                  
+
+_start:
+	  MOV     R2, #TEST_NUM   // load the data word ...
+   0:	e3a020d8 	mov	r2, #216	; 0xd8
+
+	  // initializing registers R5, R6, R7, which will hold the longest strings of 1's, 0's and alternating 1's and 0's respectively
+	  MOV     R5, #0	  
+   4:	e3a05000 	mov	r5, #0
+	  MOV     R6, #0
+   8:	e3a06000 	mov	r6, #0
+	  MOV     R7, #0
+   c:	e3a07000 	mov	r7, #0
+
+00000010 <LOOP_A>:
+
+LOOP_A:	  LDR     R9, [R2]	  // data is loaded into R9
+  10:	e5929000 	ldr	r9, [r2]
+	  CMP	  R9, #0	  // to check if end-of-list is reached
+  14:	e3590000 	cmp	r9, #0
+	  BEQ	  END
+  18:	0a000012 	beq	68 <END>
+	  B	  ONES
+  1c:	ea000012 	b	6c <ONES>
+
+00000020 <DONE_A>:
+
+// loop to store the longest number of consecutive 1's among all words
+DONE_A:	  MOV 	  R11, R0
+  20:	e1a0b000 	mov	r11, r0
+	  CMP 	  R5, R11
+  24:	e155000b 	cmp	r5, r11
+	  BGE 	  ZEROS
+  28:	aa000017 	bge	8c <ZEROS>
+	  MOV 	  R5, R11 
+  2c:	e1a0500b 	mov	r5, r11
+	  B	  ZEROS
+  30:	ea000015 	b	8c <ZEROS>
+
+00000034 <DONE_B>:
+
+// loop to store the longest number of consecutive 0's among all words
+DONE_B:	  MOV 	  R11, R4
+  34:	e1a0b004 	mov	r11, r4
+	  CMP 	  R6, R11
+  38:	e156000b 	cmp	r6, r11
+	  BGE 	  ALTERNATE
+  3c:	aa00001b 	bge	b0 <ALTERNATE>
+	  MOV 	  R6, R11
+  40:	e1a0600b 	mov	r6, r11
+	  B	  ALTERNATE
+  44:	ea000019 	b	b0 <ALTERNATE>
+
+00000048 <DONE_C>:
+
+// loop to store the longest number of alternating 1's and 0's among all words
+DONE_C:	  MOV 	  R11, R9
+  48:	e1a0b009 	mov	r11, r9
+	  ADD	  R11, #1	  // to account for loosing 1 while performing arithmetic shift
+  4c:	e28bb001 	add	r11, r11, #1
+	  CMP 	  R7, R11
+  50:	e157000b 	cmp	r7, r11
+	  BGE 	  FINAL
+  54:	aa000001 	bge	60 <FINAL>
+	  MOV 	  R7, R11
+  58:	e1a0700b 	mov	r7, r11
+	  B   	  FINAL
+  5c:	eaffffff 	b	60 <FINAL>
+
+00000060 <FINAL>:
+
+FINAL:	  ADD	  R2, #4	  // to move to next word in the list
+  60:	e2822004 	add	r2, r2, #4
+	  B	  LOOP_A
+  64:	eaffffe9 	b	10 <LOOP_A>
+
+00000068 <END>:
+ 
+END:	  B	  END
+  68:	eafffffe 	b	68 <END>
+
+0000006c <ONES>:
+
+
+/* Subroutine returns the largest number of consecutive 1's in a word of data */
+// Parameter: R1, Return: R0
+ 
+ONES:	  LDR	  R1, [R2]	  // load data word ... into R1
+  6c:	e5921000 	ldr	r1, [r2]
+	  MOV     R0, #0          // R0 will hold the result
+  70:	e3a00000 	mov	r0, #0
+
+00000074 <LOOP_B>:
+LOOP_B:   CMP     R1, #0          // loop until the data contains no more 1's
+  74:	e3510000 	cmp	r1, #0
+          BEQ     DONE_A             
+  78:	0affffe8 	beq	20 <DONE_A>
+          LSR     R10, R1, #1      // perform SHIFT, followed by AND
+  7c:	e1a0a0a1 	lsr	r10, r1, #1
+          AND     R1, R1, R10      
+  80:	e001100a 	and	r1, r1, r10
+          ADD     R0, #1          // count the string length so far
+  84:	e2800001 	add	r0, r0, #1
+          B       LOOP_B                       
+  88:	eafffff9 	b	74 <LOOP_B>
+
+0000008c <ZEROS>:
+
+
+/* Subroutine returns the largest number of consecutive 0's in a word of data */
+// Parameter: R3, Return: R4 
+ 
+ZEROS:	  LDR	  R3, [R2]	  // load data word ... into R3
+  8c:	e5923000 	ldr	r3, [r2]
+	  MVN	  R3, R3	  // move the complement of the data into R3 and find the largest number of consecutive 1's
+  90:	e1e03003 	mvn	r3, r3
+	  MOV     R4, #0          // R4 will hold the result
+  94:	e3a04000 	mov	r4, #0
+
+00000098 <LOOP_C>:
+LOOP_C:   CMP     R3, #0          // loop until the data contains no more 1's
+  98:	e3530000 	cmp	r3, #0
+          BEQ     DONE_B             
+  9c:	0affffe4 	beq	34 <DONE_B>
+          LSR     R10, R3, #1      // perform SHIFT, followed by AND
+  a0:	e1a0a0a3 	lsr	r10, r3, #1
+          AND     R3, R3, R10      
+  a4:	e003300a 	and	r3, r3, r10
+          ADD     R4, #1          // count the string length so far
+  a8:	e2844001 	add	r4, r4, #1
+          B       LOOP_C     
+  ac:	eafffff9 	b	98 <LOOP_C>
+
+000000b0 <ALTERNATE>:
+
+
+/* Subroutine returns the largest number of alternating 0's and 1's in a word of data */
+// Parameter: R8, Return: R9
+ 
+ALTERNATE:	  LDR	  R8, [R2]	  // load data word ... into R8
+  b0:	e5928000 	ldr	r8, [r2]
+		  ASR	  R12, R8, #1	  // perform arithmetic shift followed by XOR and find the largest number of consecutive 1's
+  b4:	e1a0c0c8 	asr	r12, r8, #1
+		  EOR	  R8, R8, R12
+  b8:	e028800c 	eor	r8, r8, r12
+	  	  MOV     R9, #0          // R9 will hold the result
+  bc:	e3a09000 	mov	r9, #0
+
+000000c0 <LOOP_D>:
+LOOP_D:   	  CMP     R8, #0          // loop until the data contains no more 1's
+  c0:	e3580000 	cmp	r8, #0
+          	  BEQ     DONE_C             
+  c4:	0affffdf 	beq	48 <DONE_C>
+          	  LSR     R10, R8, #1      // perform SHIFT, followed by AND
+  c8:	e1a0a0a8 	lsr	r10, r8, #1
+          	  AND     R8, R8, R10      
+  cc:	e008800a 	and	r8, r8, r10
+          	  ADD     R9, #1          // count the string length so far
+  d0:	e2899001 	add	r9, r9, #1
+          	  B       LOOP_D   
+  d4:	eafffff9 	b	c0 <LOOP_D>
+
+000000d8 <TEST_NUM>:
+  d8:	103fe00f 	.word	0x103fe00f
+  dc:	10fff00f 	.word	0x10fff00f
+  e0:	103fe002 	.word	0x103fe002
+  e4:	103fe003 	.word	0x103fe003
+  e8:	103fe004 	.word	0x103fe004
+  ec:	103fe005 	.word	0x103fe005
+  f0:	103fe006 	.word	0x103fe006
+  f4:	103fe007 	.word	0x103fe007
+  f8:	f0aab0f5 	.word	0xf0aab0f5
+  fc:	00000000 	.word	0x00000000

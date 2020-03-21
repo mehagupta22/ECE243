@@ -1,0 +1,71 @@
+
+W:/labs/lab3/part3.axf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+00000000 <__cs3_interrupt_vector>:
+/* Program that finds the largest number in a list of integers	*/
+
+            .text                   // executable code follows
+            .global _start                  
+_start:                             
+            MOV     R4, #RESULT     // R4 points to result location
+   0:	e3a04040 	mov	r4, #64	; 0x40
+            LDR     R0, [R4, #4]    // R0 holds the number of elements in the list
+   4:	e5940004 	ldr	r0, [r4, #4]
+            MOV     R1, #NUMBERS    // R1 points to the start of the list
+   8:	e3a01048 	mov	r1, #72	; 0x48
+	    LDR     R2, [R1]
+   c:	e5912000 	ldr	r2, [r1]
+            BL      LARGE           
+  10:	eb000002 	bl	20 <LARGE>
+
+00000014 <DONE>:
+DONE:       MOV     R0, R2
+  14:	e1a00002 	mov	r0, r2
+	    STR     R0, [R4]        // R0 holds the subroutine return value   
+  18:	e5840000 	str	r0, [r4]
+
+0000001c <END>:
+
+END:        B       END   
+  1c:	eafffffe 	b	1c <END>
+
+00000020 <LARGE>:
+ * Parameters: R0 has the number of elements in the list
+ *             R1 has the address of the start of the list
+ * Returns: R0 returns the largest item in the list
+ */
+
+LARGE:      SUBS    R0, #1 //decrement the loop counter
+  20:	e2500001 	subs	r0, r0, #1
+	    BEQ     DONE
+  24:	0afffffa 	beq	14 <DONE>
+	    ADD     R1, #4
+  28:	e2811004 	add	r1, r1, #4
+	    LDR     R3, [R1]
+  2c:	e5913000 	ldr	r3, [r1]
+	    CMP     R2, R3
+  30:	e1520003 	cmp	r2, r3
+	    BGE     LARGE
+  34:	aafffff9 	bge	20 <LARGE>
+	    MOV     R2, R3
+  38:	e1a02003 	mov	r2, r3
+            B       LARGE  
+  3c:	eafffff7 	b	20 <LARGE>
+
+00000040 <RESULT>:
+  40:	00000000 	.word	0x00000000
+
+00000044 <N>:
+  44:	00000007 	.word	0x00000007
+
+00000048 <NUMBERS>:
+  48:	00000004 	.word	0x00000004
+  4c:	00000005 	.word	0x00000005
+  50:	00000003 	.word	0x00000003
+  54:	fffffffe 	.word	0xfffffffe
+  58:	00000001 	.word	0x00000001
+  5c:	00000008 	.word	0x00000008
+  60:	000001f4 	.word	0x000001f4

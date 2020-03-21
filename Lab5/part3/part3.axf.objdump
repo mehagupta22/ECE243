@@ -1,0 +1,174 @@
+
+W:/labs/Lab5/part3/part3.axf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+00000000 <__cs3_interrupt_vector>:
+	.text                   // executable code follows
+ 
+	.global _start
+
+_start: 
+	LDR	R0, =0xFF200020		// HEX Address
+   0:	e59f00d8 	ldr	r0, [pc, #216]	; e0 <BIT_CODES+0xc>
+	LDR	R1, =0xFF200050		// KEY Address
+   4:	e59f10d8 	ldr	r1, [pc, #216]	; e4 <BIT_CODES+0x10>
+	LDR	R8, =0xFFFEC600		// A9 Private Timer Address
+   8:	e59f80d8 	ldr	r8, [pc, #216]	; e8 <BIT_CODES+0x14>
+	LDR	R6, =50000000		// 200MHz * 0.25s (Clock Rate * Desired Delay)
+   c:	e59f60d8 	ldr	r6, [pc, #216]	; ec <BIT_CODES+0x18>
+	STR	R6, [R8]
+  10:	e5886000 	str	r6, [r8]
+	MOV	R6, #0b011
+  14:	e3a06003 	mov	r6, #3
+	STR	R6, [R8, #8]
+  18:	e5886008 	str	r6, [r8, #8]
+
+0000001c <START>:
+START:	MOV	R2, #0			// Counter
+  1c:	e3a02000 	mov	r2, #0
+
+00000020 <COUNT>:
+COUNT:	BL	CHECK_KEY
+  20:	eb00000c 	bl	58 <CHECK_KEY>
+
+00000024 <BACK>:
+BACK:	CMP	R2, #100
+  24:	e3520064 	cmp	r2, #100	; 0x64
+	BEQ	START
+  28:	0afffffb 	beq	1c <START>
+	BL	DELAY
+  2c:	eb000002 	bl	3c <DELAY>
+	BL	DISPLAY
+  30:	eb000012 	bl	80 <DISPLAY>
+	ADD	R2, #1
+  34:	e2822001 	add	r2, r2, #1
+	B	COUNT
+  38:	eafffff8 	b	20 <COUNT>
+
+0000003c <DELAY>:
+
+// Increments counter every 0.25 seconds
+
+DELAY:	PUSH	{LR}
+  3c:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+	BL	CHECK_KEY
+  40:	eb000004 	bl	58 <CHECK_KEY>
+
+00000044 <CONTINUE>:
+CONTINUE:
+	LDR	R6, [R8, #0xC]
+  44:	e598600c 	ldr	r6, [r8, #12]
+	CMP	R6, #0
+  48:	e3560000 	cmp	r6, #0
+	BEQ	CONTINUE
+  4c:	0afffffc 	beq	44 <CONTINUE>
+	STR	R6, [R8, #0xC]
+  50:	e588600c 	str	r6, [r8, #12]
+	POP	{PC}
+  54:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+
+00000058 <CHECK_KEY>:
+
+// Checks when key is pressed and then waits for the next key to be pressed restart the counter
+
+CHECK_KEY:
+	LDR	R7, [R1, #0xC] 		// Address of the Edge Capture Register
+  58:	e591700c 	ldr	r7, [r1, #12]
+	CMP	R7, #0
+  5c:	e3570000 	cmp	r7, #0
+	BNE	KEY_1
+  60:	1a000000 	bne	68 <KEY_1>
+
+00000064 <RETURN>:
+RETURN:	
+	MOV	PC, LR			// If no key is pressed
+  64:	e1a0f00e 	mov	pc, lr
+
+00000068 <KEY_1>:
+
+KEY_1:	STR	R7, [R1, #0xC]		// When the first key is pressed, wait for the next key to be pressed to restart the counter
+  68:	e581700c 	str	r7, [r1, #12]
+
+0000006c <WAIT>:
+WAIT:	LDR	R7, [R1, #0xC]
+  6c:	e591700c 	ldr	r7, [r1, #12]
+	CMP	R7, #0
+  70:	e3570000 	cmp	r7, #0
+	BEQ	WAIT
+  74:	0afffffc 	beq	6c <WAIT>
+	STR	R7, [R1, #0xC]
+  78:	e581700c 	str	r7, [r1, #12]
+	B	RETURN
+  7c:	eafffff8 	b	64 <RETURN>
+
+00000080 <DISPLAY>:
+
+
+// Displays counter value on HEX display
+
+DISPLAY: 
+	PUSH	{R2, LR}
+  80:	e92d4004 	push	{r2, lr}
+	MOV	R5, #0
+  84:	e3a05000 	mov	r5, #0
+
+00000088 <DIV_10>:
+DIV_10:	CMP	R2, #10
+  88:	e352000a 	cmp	r2, #10
+	BGE	DIVIDE
+  8c:	aa000009 	bge	b8 <DIVIDE>
+	MOV	R3, R2
+  90:	e1a03002 	mov	r3, r2
+	BL	SEG_7
+  94:	eb00000a 	bl	c4 <SEG_7>
+	MOV	R2, R3
+  98:	e1a02003 	mov	r2, r3
+	MOV	R3, R5
+  9c:	e1a03005 	mov	r3, r5
+	BL	SEG_7
+  a0:	eb000007 	bl	c4 <SEG_7>
+	MOV	R5, R3
+  a4:	e1a05003 	mov	r5, r3
+	LSL	R5, #8
+  a8:	e1a05405 	lsl	r5, r5, #8
+	ORR	R2, R2, R5
+  ac:	e1822005 	orr	r2, r2, r5
+	STR	R2, [R0]
+  b0:	e5802000 	str	r2, [r0]
+	POP	{R2, PC}
+  b4:	e8bd8004 	pop	{r2, pc}
+
+000000b8 <DIVIDE>:
+
+DIVIDE:
+	SUB	R2, #10
+  b8:	e242200a 	sub	r2, r2, #10
+	ADD	R5, #1
+  bc:	e2855001 	add	r5, r5, #1
+	B	DIV_10
+  c0:	eafffff0 	b	88 <DIV_10>
+
+000000c4 <SEG_7>:
+
+// Converts decimal values for HEX display
+	
+SEG_7:
+	MOV	R4, #BIT_CODES
+  c4:	e3a040d4 	mov	r4, #212	; 0xd4
+	ADD	R4, R4, R3
+  c8:	e0844003 	add	r4, r4, r3
+	LDRB	R3, [R4]
+  cc:	e5d43000 	ldrb	r3, [r4]
+	MOV	PC, LR
+  d0:	e1a0f00e 	mov	pc, lr
+
+000000d4 <BIT_CODES>:
+  d4:	4f5b063f 	.word	0x4f5b063f
+  d8:	077d6d66 	.word	0x077d6d66
+  dc:	0000677f 	.word	0x0000677f
+  e0:	ff200020 	.word	0xff200020
+  e4:	ff200050 	.word	0xff200050
+  e8:	fffec600 	.word	0xfffec600
+  ec:	02faf080 	.word	0x02faf080
